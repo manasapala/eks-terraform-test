@@ -1,0 +1,60 @@
+---
+#Jean Aldoph, first revision, 9/28/2020. This playbook requires ssh into the kube config plan, or kubectl to be used
+#Execution plane, configured in ~/.kube. 
+#This will install a demo of istio, as well as set up the kiali dashboard for using gui within the provided namespace. 
+#For setupup elsewhere: 
+#Remove profile=demo in step: "installToCluster" in exchange for profile=default
+#Comment out step: samepleApplicationCreateShellVersion
+#And allow istio injection in your desired namespace in step: istioInjectionAllowed
+- name: "Istio Download, Install, Demo"
+  hosts: 127.0.0.1
+  connection: local
+  vars:
+    waitPeriod: 20
+    version: "1.7.1"
+    istioPath: "istio-1.7.1"
+    samplePath: "istio-1.7.1/samples/bookinfo/platform/kube/bookinfo.yaml"
+    gatewayPath: "istio-1.7.1/samples/bookinfo/networking/bookinfo-gateway.yaml"
+  tasks:
+    - name: "downloadIstio"
+      shell: "curl -L https://istio.io/downloadIstio |  ISTIO_VERSION=1.7.1 TARGET_ARCH=x86_64  sh -"
+
+    - name: "openPermissions"
+      become: yes
+      shell: "chmod 777 ./istio-1.7.1"
+
+    - name: "installToCluster"
+      shell: "{{istioPath}}/bin/istioctl install --set profile=demo"
+
+    - name: "istioInjectionAllowed"
+      shell: "kubectl label namespace default istio-injection=enabled  --overwrite=true"
+
+    - name: samepleApplicationCreateShellVersion
+      shell: "kubectl apply -f {{samplePath}}"
+
+    - name: "waitForPodsToBuild"
+      shell: "sleep {{waitPeriod}}"
+
+    - name: "externalPathGatewayOpen_virtualServicingEnabled"
+      shell: "kubectl apply -f {{ gatewayPath }}"
+
+    - name: "verifyVanillaIstioAnalaytics"
+      shell: "{{istioPath}}/bin/istioctl analyze"
+
+    - name: "setIngressHost"
+      shell: "export INGRESS_HOST=$(kubectl -n istio-system get service istio-ingressgateway -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')"
+
+    - name: "setIngressPort"
+      shell: "export INGRESS_PORT=$(kubectl -n istio-system get service istio-ingressgateway -o jsonpath='{.spec.ports[?(@.name==\"http2\")].port}')"
+
+    - name: "setGatewayURL"
+      shell: "export GATEWAY_URL=$INGRESS_HOST:$INGRESS_PORT"
+
+ #   - name: installDashboard
+ #     shell: "kubectl apply -f {{istioPath}}/samples/addons -n istio-system"
+
+ #   - name: "waitForDashboard"
+ #     shell: "while ! kubectl wait --for=condition=available --timeout=600s deployment/kiali -n istio-system; do sleep 1; done"
+
+ #   - name: "accessKiali"
+ #     shell: "{{istioPath}}/bin/istioctl dashboard kiali"
