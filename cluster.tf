@@ -67,7 +67,4 @@ resource "aws_eks_cluster" "vgd-cluster" {
     aws_iam_role_policy_attachment.vgd-cluster-AmazonEKSServicePolicy
   ]
 }
-output "id" {
-  value       = aws_eks_cluster.vgd-cluster.id
-  description = "The name of the cluster."
-}
+
