@@ -11,8 +11,8 @@ output "region" {
   value       = var.region
 }
 output "endpoint" {
-  value = aws_eks_cluster.example.endpoint
+  value = aws_eks_cluster.vgd-cluster.endpoint
 }
 output "kubeconfig-certificate-authority-data" {
-  value = aws_eks_cluster.example.certificate_authority[0].data
+  value = aws_eks_cluster.vgd-cluster.certificate_authority[0].data
 }
