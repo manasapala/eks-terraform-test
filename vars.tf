@@ -1,5 +1,5 @@
 variable "aws_region" {
-  default = "us-east-1"
+  default = "us-east-2"
 }
 variable "aws_azs" {
   description = "comma separated string of availability zones in order of precedence"
